@@ -44,7 +44,7 @@ export const index = async (req: Request, res: Response): Promise<void> => {
                 .sort(sort);
 
   res.json(tasks);
-}
+};
 
 // [GET] /api/v1/tasks/detail/:id
 export const detail = async (req: Request, res: Response): Promise<void> => {
@@ -56,4 +56,64 @@ export const detail = async (req: Request, res: Response): Promise<void> => {
   });
 
   res.json(task);
-}
+};
+
+// [PATCH] /api/v1/tasks/change-status/:id
+export const changeStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id: string = req.params.id;
+    const status: string = req.body.status;
+
+    await Task.updateOne({
+      _id: id
+    }, {
+      status: status
+    });
+
+    res.json({
+      code: 200,
+      message: "Cập nhật trạng thái thành công!"
+    }); 
+  } catch (error) {
+    res.json({
+      code: 400,
+      message: "Không tồn tại bản ghi!"
+    });
+  }
+};
+
+// [PATCH] /api/v1/tasks/change-multi
+export const changeMulti = async (req: Request, res: Response): Promise<void> => {
+  const { ids, status } = req.body;
+
+  const listStatus: string[] = ["initial", "doing", "finish", "pending", "notFinish"];
+
+  if (listStatus.includes(status)) {
+    await Task.updateMany({
+      _id: { $in: ids }
+    }, {
+      status: status
+    });
+
+    res.json({
+      code: 200,
+      message: "Đổi trạng thái thành công!"
+    });
+  } else {
+    res.json({
+      code: 400,
+      message: `Trạng thái ${status} không hợp lệ!`
+    });
+  }
+};
+
+// [POST] /api/v1/tasks/create
+export const create = async (req: Request, res: Response): Promise<void> => {
+  const task = new Task(req.body);
+  await task.save();
+
+  res.json({
+    code: 200,
+    message: "Tạo công việc thành công!"
+  });
+};
